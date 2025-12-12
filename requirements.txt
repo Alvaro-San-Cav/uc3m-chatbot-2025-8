@@ -1,4 +1,8 @@
-langchain_community==0.4.1
-langchain_core==1.1.3
-python-dotenv==1.2.1
-Requests==2.32.5
+langchain-community
+langchain-core
+python-dotenv
+requests
+chromadb
+sentence-transformers
+bert-score 
+torch
