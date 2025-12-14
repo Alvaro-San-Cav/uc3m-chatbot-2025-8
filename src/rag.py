@@ -24,7 +24,7 @@ from src.llm_client import call_llm_api, call_llm_api_full
 # --- 1. Helper Functions ---
 
 def detect_language(text: str) -> str:
-    text_lower = text.lower()
+    text_lower = text.lower().split()
     spanish_words = {'qué', 'que', 'cómo', 'como', 'cuál', 'cual', 'cuáles',
             'cuales', 'dónde', 'donde', 'por qué', 'por que', 'el', 'la',
             'los', 'proyecto', 'seguridad', 'requisitos', 'cuánto', 'para'}
@@ -219,13 +219,6 @@ def get_rag_chain(retriever, with_summary: bool = False):
     )
 
     return final_chain
-
-
-def get_rag_chain_with_summary(retriever):
-    """Convenience wrapper for RAG with summary enabled."""
-  return ''.join(self.stream(inputs, config))
-
-    return RAGChain(retriever, with_summary)
 
 
 def get_rag_chain_with_summary(retriever):
