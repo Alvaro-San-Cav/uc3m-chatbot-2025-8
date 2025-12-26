@@ -27,6 +27,36 @@ def load_chain(k_docs: int, with_summary: bool):
 st.title("💬 The ultimate RAG Chatbot")
 
 
+import re
+
+def format_sources_as_bullets(text: str) -> str:
+    """
+    Turns:
+      Sources: [1] A [2] B [3] C
+    into:
+      Sources:
+      - [1] A
+      - [2] B
+      - [3] C
+    """
+    if "Sources:" not in text:
+        return text
+
+    head, tail = text.split("Sources:", 1)
+    tail = tail.strip()
+
+    # Split at occurrences of [number]
+    parts = re.split(r"(?=\[\d+\])", tail)
+    parts = [p.strip() for p in parts if p.strip()]
+
+    # If we couldn't split properly, just return as-is
+    if len(parts) <= 1:
+        return text
+
+    bullet_block = "Sources:\n" + "\n".join([f"- {p}" for p in parts])
+    return head.rstrip() + "\n\n" + bullet_block
+
+
 # -------------------------
 # Sidebar: Settings + Upload
 # -------------------------
@@ -126,7 +156,7 @@ if user_text:
                 config={"configurable": {"session_id": st.session_state.session_id}},
             ):
                 full += str(chunk)
-                placeholder.markdown(full)
+                placeholder.markdown(format_sources_as_bullets(full))
 
         except Exception as e:
             full = f"❌ Error generating response: {e}"
