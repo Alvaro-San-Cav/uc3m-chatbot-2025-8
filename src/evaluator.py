@@ -188,6 +188,28 @@ TEST_DATASET = [
 ]
 
 
+def run_evaluation(k_docs: int = 10, dataset: List[Dict[str, Any]] = None):
+    """
+    Run RAG evaluation with the default or custom dataset.
+    
+    Args:
+        k_docs: Number of documents to retrieve
+        dataset: Custom test dataset (uses TEST_DATASET if None)
+    
+    Returns:
+        RAGEvaluator instance after evaluation
+    """
+    if dataset is None:
+        dataset = TEST_DATASET
+    
+    print("\n" + "="*60)
+    print("📊 RAG EVALUATION")
+    print("="*60)
+    
+    evaluator = RAGEvaluator(k_docs=k_docs)
+    evaluator.evaluate(dataset)
+    return evaluator
+
+
 if __name__ == "__main__":
-    evaluator = RAGEvaluator(k_docs=10)
-    evaluator.evaluate(TEST_DATASET)
+    run_evaluation()
