@@ -1,3 +1,4 @@
+import tempfile
 import uuid
 import os
 from pathlib import Path
@@ -101,28 +102,6 @@ with st.sidebar:
         key=f"uploader_{st.session_state.uploader_key}",
     )
 
-    st.markdown("**Uploaded documents**")
-    if not st.session_state.uploaded_docs:
-        st.caption("No uploaded documents yet.")
-    else:
-        for i, d in enumerate(st.session_state.uploaded_docs):
-            c1, c2 = st.columns([8, 2])
-            with c1:
-                st.write(f"📄 {d['name']}  *(chunks: {d.get('chunks','-')})*")
-            with c2:
-                if st.button("🗑️", key=f"del_indexed_{i}", help="Remove from ChromaDB"):
-                    try:
-                        add_files.delete_document_from_chroma(d["source_file_id"])
-                        st.toast("Deleted from index 🗑️", icon="🗑️")
-
-                        st.session_state.uploaded_docs.pop(i)
-
-                        st.cache_resource.clear()
-                        st.rerun()
-
-                    except Exception as e:
-                        st.error(f"❌ Delete failed: {e}")
-
     file_label = st.text_input("File label (optional)", value="")
 
     index_clicked = st.button("Index documents", disabled=not selected_files)
@@ -133,12 +112,13 @@ with st.sidebar:
         file_ids = []
 
         for uf in selected_files:
-            save_path = UPLOAD_DIR / uf.name
-            with open(save_path, "wb") as f:
-                f.write(uf.getbuffer())
+            suffix = Path(uf.name).suffix.lower()  # .pdf, .txt, .md
+            with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                tmp.write(uf.getbuffer())
+                tmp_path = tmp.name
 
-            fid = file_sha1(str(save_path))
-            saved_paths.append(str(save_path))
+            saved_paths.append(tmp_path)
+            fid = file_sha1(tmp_path)
             file_ids.append(fid)
 
         extra_metadata = {}
@@ -175,6 +155,35 @@ with st.sidebar:
         except Exception as e:
             st.error(f"❌ Indexing failed: {e}")
 
+        finally:
+            for p in saved_paths:
+                try:
+                    os.remove(p)
+                except Exception:
+                    pass
+
+    st.divider()
+    st.markdown("**Uploaded documents**")
+    if not st.session_state.uploaded_docs:
+        st.caption("No uploaded documents yet.")
+    else:
+        for i, d in enumerate(st.session_state.uploaded_docs):
+            c1, c2 = st.columns([8, 2])
+            with c1:
+                st.write(f"📄 {d['name']}  *(chunks: {d.get('chunks','-')})*")
+            with c2:
+                if st.button("🗑️", key=f"del_indexed_{i}", help="Remove from ChromaDB"):
+                    try:
+                        add_files.delete_document_from_chroma(d["source_file_id"])
+                        st.toast("Deleted from index 🗑️", icon="🗑️")
+
+                        st.session_state.uploaded_docs.pop(i)
+
+                        st.cache_resource.clear()
+                        st.rerun()
+
+                    except Exception as e:
+                        st.error(f"❌ Delete failed: {e}")
 
 # -------------------------
 # Load chain (cached)
