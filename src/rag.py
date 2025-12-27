@@ -8,6 +8,7 @@ Requirements:
 
 from typing import Dict, Generator, Any
 from operator import itemgetter
+from langdetect import detect, LangDetectException
 
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import (
@@ -24,12 +25,11 @@ from src.llm_client import call_llm_api, call_llm_api_full
 # --- 1. Helper Functions ---
 
 def detect_language(text: str) -> str:
-    text_lower = text.lower().split()
-    spanish_words = {'qué', 'que', 'cómo', 'como', 'cuál', 'cual', 'cuáles',
-            'cuales', 'dónde', 'donde', 'por qué', 'por que', 'el', 'la',
-            'los', 'proyecto', 'seguridad', 'requisitos', 'cuánto', 'para'}
-    spanish_count = sum(1 for w in spanish_words if w in text_lower)
-    return 'spanish' if spanish_count >= 2 else 'english'
+    try:
+        lang = detect(text)
+        return 'spanish' if lang == 'es' else 'english'
+    except LangDetectException:
+        return 'english'  # Default fallback
 
 
 def format_sources(docs) -> Dict[str, Any]:
